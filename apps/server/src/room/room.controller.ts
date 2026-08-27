@@ -6,15 +6,13 @@ import {
   Post,
 } from '@nestjs/common';
 
-import type { Room } from './types/room.type';
-import type { Player } from './types/player.type';
-
 import type {
   PlayerResponse,
   RoomResponse,
 } from '@repo/contract';
 
 import { RoomService } from './room.service';
+import { toRoomResponse, toPlayerResponse } from './room.mapper';
 
 interface CreateRoomRequest {
   nickname: string;
@@ -28,7 +26,7 @@ interface JoinRoomRequest {
 export class RoomController {
   constructor(
     private readonly roomService: RoomService,
-  ) {}
+  ) { }
 
   @Post()
   createRoom(
@@ -38,7 +36,7 @@ export class RoomController {
       this.roomService.createRoom(body.nickname);
 
     return {
-      room: this.toRoomResponse(room),
+      room: toRoomResponse(room),
       playerId,
     };
   }
@@ -49,7 +47,7 @@ export class RoomController {
   ): RoomResponse {
     const room = this.roomService.getRoom(roomId);
 
-    return this.toRoomResponse(room);
+    return toRoomResponse(room);
   }
 
   @Post(':roomId/players')
@@ -64,33 +62,7 @@ export class RoomController {
       );
 
     return {
-      player: this.toPlayerResponse(player),
-    };
-  }
-
-  private toRoomResponse(
-    room: Room,
-  ): RoomResponse {
-    return {
-      id: room.id,
-      hostId: room.hostId,
-      status: room.status,
-      players: Array.from(
-        room.players.values(),
-      ).map((player) =>
-        this.toPlayerResponse(player),
-      ),
-      createdAt: room.createdAt,
-    };
-  }
-
-  private toPlayerResponse(
-    player: Player,
-  ): PlayerResponse {
-    return {
-      id: player.id,
-      nickname: player.nickname,
-      isHost: player.isHost,
+      player: toPlayerResponse(player),
     };
   }
 }

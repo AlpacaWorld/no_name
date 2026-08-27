@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto';
 
 import { Room } from './types/room.type';
 import { Player } from './types/player.type';
+import { ROOM_STATUS, RoomStatus } from '@repo/contract';
 
 @Injectable()
 export class RoomService {
@@ -19,12 +20,13 @@ export class RoomService {
       id: playerId,
       nickname,
       isHost: true,
+      connected: false,
     };
 
     const room: Room = {
       id: roomId,
       hostId: playerId,
-      status: 'WAITING',
+      status: ROOM_STATUS.WAITING,
       players: new Map([[playerId, host]]),
       createdAt: Date.now(),
     };
@@ -59,7 +61,7 @@ export class RoomService {
   ) {
     const room = this.getRoom(roomId);
 
-    if (room.status !== 'WAITING') {
+    if (room.status !== ROOM_STATUS.WAITING) {
       throw new Error('이미 게임이 시작된 방입니다.');
     }
 
@@ -69,6 +71,7 @@ export class RoomService {
       id: playerId,
       nickname,
       isHost: false,
+      connected: false,
     };
 
     room.players.set(playerId, player);
@@ -114,13 +117,56 @@ export class RoomService {
    */
   updateStatus(
     roomId: string,
-    status: Room['status'],
+    status: RoomStatus,
   ) {
     const room = this.getRoom(roomId);
 
     room.status = status;
 
     return room;
+  }
+
+  /**
+   * 플레이어 소켓 연결
+   */
+  connectPlayer(
+    roomId: string,
+    playerId: string,
+    socketId: string,
+  ) {
+    const player = this.getPlayer(
+      roomId,
+      playerId,
+    );
+
+    const wasConnected =
+      player.connected;
+
+    player.socketId = socketId;
+    player.connected = true;
+
+    return {
+      player,
+      reconnected: wasConnected === false,
+    };
+  }
+
+  /**
+   * 플레이어 소켓 연결 해제
+   */
+  disconnectPlayer(
+    roomId: string,
+    playerId: string,
+  ) {
+    const player = this.getPlayer(
+      roomId,
+      playerId,
+    );
+
+    player.socketId = undefined;
+    player.connected = false;
+
+    return player;
   }
 
   /**

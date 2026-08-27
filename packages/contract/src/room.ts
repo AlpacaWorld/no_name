@@ -1,9 +1,13 @@
 import type { PlayerResponse } from './player';
 
+export const ROOM_STATUS = {
+  WAITING: 'WAITING',
+  PLAYING: 'PLAYING',
+  CLOSED: 'CLOSED',
+} as const;
+
 export type RoomStatus =
-  | 'WAITING'
-  | 'PLAYING'
-  | 'CLOSED';
+  (typeof ROOM_STATUS)[keyof typeof ROOM_STATUS];
 
 export interface RoomResponse {
   id: string;
