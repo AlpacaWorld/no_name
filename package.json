@@ -1,6 +1,7 @@
 {
   "name": "no_name",
   "private": true,
+  "packageManager": "pnpm@11.23.0",
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
