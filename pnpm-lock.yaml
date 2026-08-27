@@ -313,6 +313,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@repo/contract':
+        specifier: workspace:*
+        version: link:../../packages/contract
       next:
         specifier: 16.3.3
         version: 16.3.3(@babel/core@7.29.7(supports-color@8.1.1))(@types/node@20.19.43)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
