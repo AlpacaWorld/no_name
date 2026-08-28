@@ -81,6 +81,9 @@ export default function SocketTestPage() {
       ROOM_EVENT.PLAYER_JOINED,
       ROOM_EVENT.PLAYER_RECONNECTED,
       ROOM_EVENT.PLAYER_DISCONNECTED,
+      ROOM_EVENT.PLAYER_LEFT,
+      ROOM_EVENT.CLOSED,
+      ROOM_EVENT.STATE,
     ].forEach((event) => {
       socket.on(event, (payload) => addLog(user.nickname, event, payload));
     });

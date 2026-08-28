@@ -6,6 +6,8 @@ export const ROOM_EVENT = {
   PLAYER_JOINED: 'room:player-joined',
   PLAYER_RECONNECTED: 'room:player-reconnected',
   PLAYER_DISCONNECTED: 'room:player-disconnected',
+  PLAYER_LEFT: 'room:player-left',
+  CLOSED: 'room:closed',
   STATE: 'room:state',
 } as const;
 
@@ -24,6 +26,15 @@ export interface PlayerReconnectedPayload {
 
 export interface PlayerDisconnectedPayload {
   playerId: string;
+}
+
+export interface PlayerLeftPayload {
+  playerId: string;
+}
+
+export interface RoomClosedPayload {
+  roomId: string;
+  reason: 'HOST_LEFT' | 'EMPTY';
 }
 
 export interface RoomStatePayload {

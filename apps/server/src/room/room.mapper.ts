@@ -13,6 +13,7 @@ export function toPlayerResponse(
     id: player.id,
     nickname: player.nickname,
     isHost: player.isHost,
+    connected: player.connected,
   };
 }
 

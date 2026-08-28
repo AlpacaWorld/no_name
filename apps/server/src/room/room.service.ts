@@ -136,20 +136,25 @@ export class RoomService {
     playerId: string,
     socketId: string,
   ) {
-    const player = this.getPlayer(
-      roomId,
-      playerId,
-    );
+    const room = this.getRoom(roomId);
+    const player = room.players.get(playerId);
 
-    const reconnected = player.hasConnected && !player.connected;
+    if (!player) {
+      throw new NotFoundException('존재하지 않는 플레이어입니다.');
+    }
+
+    const wasConnected = player.connected;
+    const reconnected = player.hasConnected && !wasConnected;
 
     player.socketId = socketId;
     player.connected = true;
     player.hasConnected = true;
 
     return {
+      room,
       player,
       reconnected,
+      connectionChanged: !wasConnected,
     };
   }
 
@@ -159,16 +164,62 @@ export class RoomService {
   disconnectPlayer(
     roomId: string,
     playerId: string,
+    socketId: string,
   ) {
-    const player = this.getPlayer(
-      roomId,
-      playerId,
-    );
+    const room = this.rooms.get(roomId);
+    const player = room?.players.get(playerId);
+
+    if (!room || !player || player.socketId !== socketId) {
+      return undefined;
+    }
 
     player.socketId = undefined;
     player.connected = false;
 
-    return player;
+    return { room, player };
+  }
+
+  /**
+   * 재접속 유예 시간이 지난 연결 해제 플레이어를 제거한다.
+   */
+  expireDisconnectedPlayer(
+    roomId: string,
+    playerId: string,
+  ) {
+    const room = this.rooms.get(roomId);
+    const player = room?.players.get(playerId);
+
+    if (!room || !player || player.connected) {
+      return undefined;
+    }
+
+    room.players.delete(playerId);
+
+    if (player.isHost) {
+      this.rooms.delete(roomId);
+      return {
+        room,
+        player,
+        roomClosed: true,
+        closeReason: 'HOST_LEFT' as const,
+      };
+    }
+
+    if (room.players.size === 0) {
+      this.rooms.delete(roomId);
+      return {
+        room,
+        player,
+        roomClosed: true,
+        closeReason: 'EMPTY' as const,
+      };
+    }
+
+    return {
+      room,
+      player,
+      roomClosed: false,
+    };
   }
 
   /**
