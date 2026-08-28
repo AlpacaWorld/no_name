@@ -5,4 +5,5 @@ export interface Player {
 
   socketId?: string;
   connected: boolean;
+  hasConnected: boolean;
 }

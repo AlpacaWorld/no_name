@@ -21,6 +21,7 @@ export class RoomService {
       nickname,
       isHost: true,
       connected: false,
+      hasConnected: false,
     };
 
     const room: Room = {
@@ -72,6 +73,7 @@ export class RoomService {
       nickname,
       isHost: false,
       connected: false,
+      hasConnected: false,
     };
 
     room.players.set(playerId, player);
@@ -139,15 +141,15 @@ export class RoomService {
       playerId,
     );
 
-    const wasConnected =
-      player.connected;
+    const reconnected = player.hasConnected && !player.connected;
 
     player.socketId = socketId;
     player.connected = true;
+    player.hasConnected = true;
 
     return {
       player,
-      reconnected: wasConnected === false,
+      reconnected,
     };
   }
 

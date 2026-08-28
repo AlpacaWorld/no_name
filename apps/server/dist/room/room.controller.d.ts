@@ -17,7 +17,5 @@ export declare class RoomController {
     joinRoom(roomId: string, body: JoinRoomRequest): {
         player: PlayerResponse;
     };
-    private toRoomResponse;
-    private toPlayerResponse;
 }
 export {};

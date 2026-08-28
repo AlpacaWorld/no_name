@@ -3,4 +3,6 @@ export interface Player {
     nickname: string;
     isHost: boolean;
     socketId?: string;
+    connected: boolean;
+    hasConnected: boolean;
 }

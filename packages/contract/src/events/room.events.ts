@@ -1,5 +1,5 @@
-import type { PlayerResponse } from '../player';
-import type { RoomResponse } from '../room';
+import type { PlayerResponse } from '../player.js';
+import type { RoomResponse } from '../room.js';
 
 export const ROOM_EVENT = {
   JOIN: 'room:join',
