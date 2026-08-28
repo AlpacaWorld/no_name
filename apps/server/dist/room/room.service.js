@@ -9,6 +9,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.RoomService = void 0;
 const common_1 = require("@nestjs/common");
 const crypto_1 = require("crypto");
+const contract_1 = require("@repo/contract");
 let RoomService = class RoomService {
     rooms = new Map();
     createRoom(nickname) {
@@ -18,11 +19,13 @@ let RoomService = class RoomService {
             id: playerId,
             nickname,
             isHost: true,
+            connected: false,
+            hasConnected: false,
         };
         const room = {
             id: roomId,
             hostId: playerId,
-            status: 'WAITING',
+            status: contract_1.ROOM_STATUS.WAITING,
             players: new Map([[playerId, host]]),
             createdAt: Date.now(),
         };
@@ -41,7 +44,7 @@ let RoomService = class RoomService {
     }
     joinRoom(roomId, nickname) {
         const room = this.getRoom(roomId);
-        if (room.status !== 'WAITING') {
+        if (room.status !== contract_1.ROOM_STATUS.WAITING) {
             throw new Error('이미 게임이 시작된 방입니다.');
         }
         const playerId = (0, crypto_1.randomUUID)();
@@ -49,6 +52,8 @@ let RoomService = class RoomService {
             id: playerId,
             nickname,
             isHost: false,
+            connected: false,
+            hasConnected: false,
         };
         room.players.set(playerId, player);
         return {
@@ -72,6 +77,23 @@ let RoomService = class RoomService {
         const room = this.getRoom(roomId);
         room.status = status;
         return room;
+    }
+    connectPlayer(roomId, playerId, socketId) {
+        const player = this.getPlayer(roomId, playerId);
+        const reconnected = player.hasConnected && !player.connected;
+        player.socketId = socketId;
+        player.connected = true;
+        player.hasConnected = true;
+        return {
+            player,
+            reconnected,
+        };
+    }
+    disconnectPlayer(roomId, playerId) {
+        const player = this.getPlayer(roomId, playerId);
+        player.socketId = undefined;
+        player.connected = false;
+        return player;
     }
     generateRoomId() {
         let roomId;

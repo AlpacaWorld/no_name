@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.RoomController = void 0;
 const common_1 = require("@nestjs/common");
 const room_service_1 = require("./room.service");
+const room_mapper_1 = require("./room.mapper");
 let RoomController = class RoomController {
     roomService;
     constructor(roomService) {
@@ -23,34 +24,18 @@ let RoomController = class RoomController {
     createRoom(body) {
         const { room, playerId } = this.roomService.createRoom(body.nickname);
         return {
-            room: this.toRoomResponse(room),
+            room: (0, room_mapper_1.toRoomResponse)(room),
             playerId,
         };
     }
     getRoom(roomId) {
         const room = this.roomService.getRoom(roomId);
-        return this.toRoomResponse(room);
+        return (0, room_mapper_1.toRoomResponse)(room);
     }
     joinRoom(roomId, body) {
         const { player } = this.roomService.joinRoom(roomId, body.nickname);
         return {
-            player: this.toPlayerResponse(player),
-        };
-    }
-    toRoomResponse(room) {
-        return {
-            id: room.id,
-            hostId: room.hostId,
-            status: room.status,
-            players: Array.from(room.players.values()).map((player) => this.toPlayerResponse(player)),
-            createdAt: room.createdAt,
-        };
-    }
-    toPlayerResponse(player) {
-        return {
-            id: player.id,
-            nickname: player.nickname,
-            isHost: player.isHost,
+            player: (0, room_mapper_1.toPlayerResponse)(player),
         };
     }
 };
