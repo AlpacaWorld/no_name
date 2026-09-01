@@ -3,6 +3,8 @@ import type { RoomResponse } from '../room.js';
 
 export const ROOM_EVENT = {
   JOIN: 'room:join',
+  START: 'room:start',
+  STARTED: 'room:started',
   PLAYER_JOINED: 'room:player-joined',
   PLAYER_RECONNECTED: 'room:player-reconnected',
   PLAYER_DISCONNECTED: 'room:player-disconnected',
@@ -26,6 +28,10 @@ export interface PlayerReconnectedPayload {
 
 export interface PlayerDisconnectedPayload {
   playerId: string;
+}
+
+export interface RoomStartedPayload {
+  room: RoomResponse;
 }
 
 export interface PlayerLeftPayload {

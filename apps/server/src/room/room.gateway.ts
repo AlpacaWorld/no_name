@@ -88,6 +88,24 @@ export class RoomGateway
       );
   }
 
+  @SubscribeMessage(ROOM_EVENT.START)
+  handleStartGame(
+    @ConnectedSocket() socket: Socket,
+  ) {
+    const { roomId, playerId } = socket.data;
+
+    if (!roomId || !playerId) return;
+
+    const room = this.roomService.startGame(roomId, playerId);
+
+    this.server.to(roomId).emit(ROOM_EVENT.STARTED, {
+      room: toRoomResponse(room),
+    });
+    this.server.to(roomId).emit(ROOM_EVENT.STATE, {
+      room: toRoomResponse(room),
+    });
+  }
+
   handleDisconnect(socket: Socket) {
     const { roomId, playerId } = socket.data;
 

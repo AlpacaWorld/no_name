@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { randomUUID } from 'crypto';
 
 import { Room } from './types/room.type';
@@ -124,6 +129,32 @@ export class RoomService {
     const room = this.getRoom(roomId);
 
     room.status = status;
+
+    return room;
+  }
+
+  /**
+   * 방장만 최소 인원을 충족한 대기실에서 게임을 시작할 수 있다.
+   */
+  startGame(roomId: string, playerId: string) {
+    const room = this.getRoom(roomId);
+
+    if (room.hostId !== playerId) {
+      throw new ForbiddenException('방장만 게임을 시작할 수 있습니다.');
+    }
+
+    if (room.status !== ROOM_STATUS.WAITING) {
+      throw new BadRequestException('대기 중인 방에서만 게임을 시작할 수 있습니다.');
+    }
+
+    const connectedPlayers = Array.from(room.players.values())
+      .filter((player) => player.connected);
+
+    if (connectedPlayers.length < 3) {
+      throw new BadRequestException('게임을 시작하려면 접속 중인 플레이어가 3명 이상 필요합니다.');
+    }
+
+    room.status = ROOM_STATUS.PLAYING;
 
     return room;
   }
