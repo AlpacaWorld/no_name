@@ -24,10 +24,11 @@ export default function Home() {
     setIsSubmitting(true);
     try {
       const response = await fetch(`${SERVER_URL}/rooms`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nickname: name }),
       });
-      if (!response.ok) throw new Error('방을 만들지 못했습니다.');
+      if (!response.ok) throw new Error('작전실을 열지 못했습니다.');
 
       const { room, playerId } = await response.json() as CreateRoomResult;
       localStorage.setItem(`liar:room:${room.id}:player-id`, playerId);
@@ -40,18 +41,40 @@ export default function Home() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-950 p-6 text-slate-100">
-      <section className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-7 shadow-2xl shadow-cyan-950/30">
-        <p className="text-sm font-semibold tracking-[0.22em] text-cyan-400">LIAR GAME</p>
-        <h1 className="mt-3 text-3xl font-bold">친구들과 라이어 게임</h1>
-        <p className="mt-3 leading-6 text-slate-400">방을 만들고 링크를 공유해 바로 시작하세요.</p>
-        <form className="mt-8 space-y-3" onSubmit={createRoom}>
-          <label className="block text-sm font-medium" htmlFor="nickname">내 닉네임</label>
-          <input id="nickname" className="w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2.5 outline-none transition focus:border-cyan-400" value={nickname} onChange={(event) => setNickname(event.target.value)} maxLength={20} placeholder="예: 알파카" autoComplete="nickname" />
-          <button className="w-full rounded-lg bg-cyan-400 px-4 py-2.5 font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-50" disabled={!nickname.trim() || isSubmitting} type="submit">{isSubmitting ? '방 만드는 중…' : '방 만들기'}</button>
-          {error && <p className="text-sm text-rose-400">{error}</p>}
-        </form>
-      </section>
+    <main className="case-shell flex items-center justify-center p-5 sm:p-8">
+      <div className="relative z-10 grid w-full max-w-5xl overflow-hidden rounded-sm border border-white/10 lg:grid-cols-[1.1fr_0.9fr]">
+        <section className="relative min-h-[31rem] overflow-hidden bg-[#d9412e] p-7 sm:p-11">
+          <div className="absolute -right-20 -top-24 h-72 w-72 rounded-full border-[34px] border-[#f5b540] opacity-95" />
+          <div className="absolute -bottom-20 -left-16 h-64 w-64 rounded-full border-[28px] border-[#17171a] opacity-90" />
+          <div className="relative flex h-full flex-col justify-between">
+            <p className="font-mono text-xs font-bold tracking-[0.22em] text-[#17171a]">CASE FILE · 01</p>
+            <div>
+              <p className="font-mono text-xs font-bold tracking-[0.2em] text-[#17171a]">WHO IS LYING?</p>
+              <h1 className="mt-4 max-w-lg text-5xl font-black leading-[0.9] tracking-[-0.07em] text-[#f6efdf] sm:text-7xl">LIAR<br />GAME</h1>
+              <p className="mt-7 max-w-sm text-base font-medium leading-7 text-[#2d1815]">모두가 같은 단서를 알고 있습니다.<br />단 한 명을 제외하고.</p>
+            </div>
+            <div className="flex items-center gap-3 font-mono text-[0.68rem] font-bold tracking-[0.12em] text-[#17171a]"><span className="h-px w-9 bg-[#17171a]" /> LIVE DEDUCTION ROOM</div>
+          </div>
+        </section>
+
+        <section className="paper-card flex items-center p-7 sm:p-11">
+          <div className="relative z-10 w-full">
+            <p className="eyebrow">Create a private room</p>
+            <h2 className="mt-4 text-3xl font-black tracking-[-0.045em] text-[#f1eadc]">작전실 개설</h2>
+            <p className="mt-3 text-sm leading-6 text-[#c8bfad]">닉네임을 정하고, 초대 링크를 팀원들에게 전달하세요.</p>
+            <hr className="torn-rule mt-8" />
+
+            <form className="mt-7 space-y-4" onSubmit={createRoom}>
+              <label className="block text-sm font-bold text-[#f1eadc]" htmlFor="nickname">요원 코드명</label>
+              <input id="nickname" className="case-input" value={nickname} onChange={(event) => setNickname(event.target.value)} maxLength={20} placeholder="예: 알파카" autoComplete="nickname" />
+              <button className="case-button mt-2 w-full px-4 py-3" disabled={!nickname.trim() || isSubmitting} type="submit">{isSubmitting ? '작전실 여는 중…' : '새 작전실 열기 →'}</button>
+              {error && <p className="text-sm font-medium text-[#ff8b7e]">{error}</p>}
+            </form>
+
+            <p className="mt-8 font-mono text-[0.65rem] leading-5 tracking-[0.08em] text-[#8f8779]">3명 이상 모이면 방장이 게임을 시작할 수 있습니다.</p>
+          </div>
+        </section>
+      </div>
     </main>
   );
 }

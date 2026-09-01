@@ -1,26 +1,130 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --ink: #17171a;
+  --paper: #f1eadc;
+  --paper-muted: #c8bfad;
+  --red: #e74330;
+  --red-dark: #941f19;
+  --night: #101012;
+  --night-soft: #1b1b20;
+  --line: rgba(241, 234, 220, 0.17);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+* { box-sizing: border-box; }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--night);
+  color: var(--paper);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+button, input { font: inherit; }
+
+.case-shell {
+  min-height: 100vh;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 18% 8%, rgba(231, 67, 48, 0.18), transparent 29rem),
+    radial-gradient(circle at 86% 88%, rgba(242, 194, 87, 0.11), transparent 30rem),
+    var(--night);
+}
+
+.case-shell::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.3;
+  background-image: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255,255,255,0.018) 4px);
+  mix-blend-mode: screen;
+}
+
+.eyebrow {
+  color: #f5b540;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.19em;
+  text-transform: uppercase;
+}
+
+.paper-card {
+  position: relative;
+  border: 1px solid rgba(241, 234, 220, 0.18);
+  background: linear-gradient(138deg, rgba(35, 35, 41, 0.96), rgba(20, 20, 24, 0.96));
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.36);
+}
+
+.paper-card::after {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  pointer-events: none;
+  border: 1px solid rgba(241, 234, 220, 0.06);
+}
+
+.case-input {
+  width: 100%;
+  border: 1px solid rgba(241, 234, 220, 0.26);
+  border-radius: 0.35rem;
+  background: rgba(9, 9, 11, 0.72);
+  color: var(--paper);
+  outline: none;
+  padding: 0.85rem 1rem;
+  transition: border-color 160ms, box-shadow 160ms;
+}
+
+.case-input:focus {
+  border-color: #f5b540;
+  box-shadow: 0 0 0 3px rgba(245, 181, 64, 0.13);
+}
+
+.case-button {
+  border-radius: 0.35rem;
+  background: var(--red);
+  color: #fff9eb;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  transition: transform 160ms, background 160ms, opacity 160ms;
+}
+
+.case-button:hover:not(:disabled) { background: #f45742; transform: translateY(-1px); }
+.case-button:disabled { cursor: not-allowed; opacity: 0.42; }
+
+.ghost-button {
+  border: 1px solid rgba(241, 234, 220, 0.34);
+  border-radius: 0.35rem;
+  color: var(--paper);
+  transition: background 160ms, border-color 160ms;
+}
+
+.ghost-button:hover { border-color: #f5b540; background: rgba(245, 181, 64, 0.08); }
+
+.status-light {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid rgba(241, 234, 220, 0.18);
+  border-radius: 999px;
+  padding: 0.35rem 0.65rem;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.status-light::before { content: ""; width: 0.45rem; height: 0.45rem; border-radius: 50%; background: #f5b540; box-shadow: 0 0 10px currentColor; }
+.status-light.online { color: #97e9bb; }
+.status-light.online::before { background: #65d992; }
+
+.torn-rule { height: 1px; border: 0; background: repeating-linear-gradient(90deg, rgba(241,234,220,.35) 0 7px, transparent 7px 11px); }
+
+@media (max-width: 640px) {
+  .case-shell { background-size: auto; }
 }
