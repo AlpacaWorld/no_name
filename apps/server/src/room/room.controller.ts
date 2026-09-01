@@ -28,6 +28,11 @@ export class RoomController {
     private readonly roomService: RoomService,
   ) { }
 
+  @Get('health')
+  health() {
+    return { status: 'ok' };
+  }
+
   @Post()
   createRoom(
     @Body() body: CreateRoomRequest,

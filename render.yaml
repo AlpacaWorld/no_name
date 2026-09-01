@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: liar-game-server
+    runtime: node
+    buildCommand: corepack enable && pnpm install && pnpm --filter @repo/contract build && pnpm --filter server build
+    startCommand: pnpm --filter server start:prod
+    healthCheckPath: /rooms/health
+    envVars:
+      - key: CLIENT_ORIGIN
+        sync: false

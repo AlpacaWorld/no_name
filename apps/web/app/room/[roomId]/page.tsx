@@ -6,7 +6,7 @@ import { useParams } from 'next/navigation';
 import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 import { io, type Socket } from 'socket.io-client';
 
-const SERVER_URL = 'http://localhost:4000';
+const SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL ?? 'http://localhost:4000';
 interface JoinRoomResult { player: PlayerResponse; }
 
 export default function RoomLobbyPage() {
