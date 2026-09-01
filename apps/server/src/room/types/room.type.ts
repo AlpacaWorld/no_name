@@ -1,4 +1,5 @@
 import { Player } from './player.type';
+import { Game } from './game.type';
 
 export type RoomStatus =
   | 'WAITING'
@@ -10,5 +11,6 @@ export interface Room {
   hostId: string;
   status: RoomStatus;
   players: Map<string, Player>;
+  game?: Game;
   createdAt: number;
 }

@@ -8,6 +8,7 @@ import { randomUUID } from 'crypto';
 
 import { Room } from './types/room.type';
 import { Player } from './types/player.type';
+import { GAME_KEYWORDS } from './game-keywords';
 import { ROOM_STATUS, RoomStatus } from '@repo/contract';
 
 @Injectable()
@@ -154,9 +155,45 @@ export class RoomService {
       throw new BadRequestException('게임을 시작하려면 접속 중인 플레이어가 3명 이상 필요합니다.');
     }
 
+    if (connectedPlayers.length !== room.players.size) {
+      throw new BadRequestException('모든 참가자가 접속한 뒤 게임을 시작할 수 있습니다.');
+    }
+
+    const topic = GAME_KEYWORDS[Math.floor(Math.random() * GAME_KEYWORDS.length)];
+    const liar = connectedPlayers[Math.floor(Math.random() * connectedPlayers.length)];
+
     room.status = ROOM_STATUS.PLAYING;
+    room.game = {
+      category: topic.category,
+      keyword: topic.keyword,
+      liarId: liar.id,
+      playerIds: connectedPlayers.map((player) => player.id),
+    };
 
     return room;
+  }
+
+  getRoleAssignment(roomId: string, playerId: string) {
+    const room = this.getRoom(roomId);
+    const game = room.game;
+
+    if (!game || room.status !== ROOM_STATUS.PLAYING) {
+      throw new BadRequestException('진행 중인 게임이 없습니다.');
+    }
+
+    if (!game.playerIds.includes(playerId)) {
+      throw new ForbiddenException('게임 참가자가 아닙니다.');
+    }
+
+    if (game.liarId === playerId) {
+      return { role: 'LIAR' as const, category: game.category };
+    }
+
+    return {
+      role: 'CITIZEN' as const,
+      category: game.category,
+      keyword: game.keyword,
+    };
   }
 
   /**

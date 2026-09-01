@@ -5,6 +5,7 @@ export const ROOM_EVENT = {
   JOIN: 'room:join',
   START: 'room:start',
   STARTED: 'room:started',
+  ROLE_ASSIGNED: 'game:role-assigned',
   PLAYER_JOINED: 'room:player-joined',
   PLAYER_RECONNECTED: 'room:player-reconnected',
   PLAYER_DISCONNECTED: 'room:player-disconnected',
@@ -32,6 +33,12 @@ export interface PlayerDisconnectedPayload {
 
 export interface RoomStartedPayload {
   room: RoomResponse;
+}
+
+export interface RoleAssignedPayload {
+  role: 'LIAR' | 'CITIZEN';
+  category: string;
+  keyword?: string;
 }
 
 export interface PlayerLeftPayload {

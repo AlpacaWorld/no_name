@@ -55,6 +55,9 @@ export class RoomGateway
     socket.data.playerId = data.playerId;
 
     if (!result.connectionChanged) {
+      if (result.room.status === 'PLAYING') {
+        this.emitRoleAssignment(socket, data.roomId, data.playerId);
+      }
       socket.emit(ROOM_EVENT.STATE, {
         room: toRoomResponse(result.room),
       });
@@ -86,6 +89,10 @@ export class RoomGateway
         ROOM_EVENT.STATE,
         { room: toRoomResponse(result.room) },
       );
+
+    if (result.room.status === 'PLAYING') {
+      this.emitRoleAssignment(socket, data.roomId, data.playerId);
+    }
   }
 
   @SubscribeMessage(ROOM_EVENT.START)
@@ -103,6 +110,12 @@ export class RoomGateway
     });
     this.server.to(roomId).emit(ROOM_EVENT.STATE, {
       room: toRoomResponse(room),
+    });
+
+    room.players.forEach((player) => {
+      if (!player.socketId) return;
+
+      this.emitRoleAssignment(player.socketId, roomId, player.id);
     });
   }
 
@@ -195,5 +208,20 @@ export class RoomGateway
 
   private timerKey(roomId: string, playerId: string) {
     return `${roomId}:${playerId}`;
+  }
+
+  private emitRoleAssignment(
+    socket: Socket | string,
+    roomId: string,
+    playerId: string,
+  ) {
+    const assignment = this.roomService.getRoleAssignment(roomId, playerId);
+
+    if (typeof socket === 'string') {
+      this.server.to(socket).emit(ROOM_EVENT.ROLE_ASSIGNED, assignment);
+      return;
+    }
+
+    socket.emit(ROOM_EVENT.ROLE_ASSIGNED, assignment);
   }
 }
