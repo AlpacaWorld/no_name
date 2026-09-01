@@ -6,6 +6,10 @@ export const ROOM_EVENT = {
   START: 'room:start',
   STARTED: 'room:started',
   ROLE_ASSIGNED: 'game:role-assigned',
+  BEGIN_VOTING: 'game:begin-voting',
+  VOTE: 'game:vote',
+  GUESS: 'game:guess',
+  RESTART: 'game:restart',
   PLAYER_JOINED: 'room:player-joined',
   PLAYER_RECONNECTED: 'room:player-reconnected',
   PLAYER_DISCONNECTED: 'room:player-disconnected',
@@ -39,6 +43,14 @@ export interface RoleAssignedPayload {
   role: 'LIAR' | 'CITIZEN';
   category: string;
   keyword?: string;
+}
+
+export interface VotePayload {
+  targetId: string;
+}
+
+export interface GuessPayload {
+  keyword: string;
 }
 
 export interface PlayerLeftPayload {

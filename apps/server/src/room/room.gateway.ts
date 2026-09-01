@@ -11,7 +11,9 @@ import { Server, Socket } from 'socket.io';
 
 import {
   ROOM_EVENT,
+  type GuessPayload,
   type RoomJoinPayload,
+  type VotePayload,
 } from '@repo/contract';
 
 import { RoomService } from './room.service';
@@ -119,6 +121,48 @@ export class RoomGateway
     });
   }
 
+  @SubscribeMessage(ROOM_EVENT.BEGIN_VOTING)
+  handleBeginVoting(@ConnectedSocket() socket: Socket) {
+    const { roomId, playerId } = socket.data;
+
+    if (!roomId || !playerId) return;
+
+    this.emitRoomState(this.roomService.beginVoting(roomId, playerId));
+  }
+
+  @SubscribeMessage(ROOM_EVENT.VOTE)
+  handleVote(
+    @MessageBody() data: VotePayload,
+    @ConnectedSocket() socket: Socket,
+  ) {
+    const { roomId, playerId } = socket.data;
+
+    if (!roomId || !playerId) return;
+
+    this.emitRoomState(this.roomService.castVote(roomId, playerId, data.targetId));
+  }
+
+  @SubscribeMessage(ROOM_EVENT.GUESS)
+  handleGuess(
+    @MessageBody() data: GuessPayload,
+    @ConnectedSocket() socket: Socket,
+  ) {
+    const { roomId, playerId } = socket.data;
+
+    if (!roomId || !playerId) return;
+
+    this.emitRoomState(this.roomService.guessKeyword(roomId, playerId, data.keyword));
+  }
+
+  @SubscribeMessage(ROOM_EVENT.RESTART)
+  handleRestartGame(@ConnectedSocket() socket: Socket) {
+    const { roomId, playerId } = socket.data;
+
+    if (!roomId || !playerId) return;
+
+    this.emitRoomState(this.roomService.restartGame(roomId, playerId));
+  }
+
   handleDisconnect(socket: Socket) {
     const { roomId, playerId } = socket.data;
 
@@ -223,5 +267,11 @@ export class RoomGateway
     }
 
     socket.emit(ROOM_EVENT.ROLE_ASSIGNED, assignment);
+  }
+
+  private emitRoomState(room: ReturnType<RoomService['getRoom']>) {
+    this.server.to(room.id).emit(ROOM_EVENT.STATE, {
+      room: toRoomResponse(room),
+    });
   }
 }

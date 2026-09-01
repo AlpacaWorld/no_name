@@ -1,5 +1,6 @@
 import type {
   PlayerResponse,
+  GameResponse,
   RoomResponse,
 } from '@repo/contract';
 
@@ -26,6 +27,24 @@ export function toRoomResponse(
     status: room.status,
     players: Array.from(room.players.values())
       .map(toPlayerResponse),
+    game: room.game ? toGameResponse(room.game) : undefined,
     createdAt: room.createdAt,
+  };
+}
+
+function toGameResponse(game: Room['game'] & {}) : GameResponse {
+  return {
+    phase: game.phase,
+    voteCount: game.votes.size,
+    playerCount: game.playerIds.length,
+    voteCounts: game.phase === 'VOTING'
+      ? game.playerIds.map((playerId) => ({
+        playerId,
+        count: Array.from(game.votes.values())
+          .filter((targetId) => targetId === playerId).length,
+      }))
+      : undefined,
+    winner: game.winner,
+    keyword: game.phase === 'FINISHED' ? game.keyword : undefined,
   };
 }
