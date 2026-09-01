@@ -73,7 +73,7 @@ export class RoomService {
     const room = this.getRoom(roomId);
 
     if (room.status !== ROOM_STATUS.WAITING) {
-      throw new Error('이미 게임이 시작된 방입니다.');
+      throw new BadRequestException('이미 게임이 시작된 방입니다.');
     }
 
     const playerId = randomUUID();
