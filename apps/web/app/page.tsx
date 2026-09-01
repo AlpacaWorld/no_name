@@ -45,8 +45,8 @@ export default function Home() {
       <div className="relative z-10 grid w-full max-w-5xl overflow-hidden rounded-sm border border-white/10 lg:grid-cols-[1.1fr_0.9fr]">
         <section className="relative min-h-[31rem] overflow-hidden bg-[#d9412e] p-7 sm:p-11">
           <div className="absolute -right-20 -top-24 h-72 w-72 rounded-full border-[34px] border-[#f5b540] opacity-95" />
-          <div className="absolute -bottom-20 -left-16 h-64 w-64 rounded-full border-[28px] border-[#17171a] opacity-90" />
-          <div className="relative flex h-full flex-col justify-between">
+          <div className="absolute -bottom-40 -left-28 h-64 w-64 rounded-full border-[28px] border-[#17171a] opacity-90" />
+          <div className="relative z-10 flex h-full flex-col justify-between">
             <p className="font-mono text-xs font-bold tracking-[0.22em] text-[#17171a]">CASE FILE · 01</p>
             <div>
               <p className="font-mono text-xs font-bold tracking-[0.2em] text-[#17171a]">WHO IS LYING?</p>
