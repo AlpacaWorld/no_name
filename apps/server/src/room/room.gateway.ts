@@ -1,0 +1,277 @@
+import {
+  ConnectedSocket,
+  MessageBody,
+  OnGatewayDisconnect,
+  SubscribeMessage,
+  WebSocketGateway,
+  WebSocketServer,
+} from '@nestjs/websockets';
+import { OnModuleDestroy } from '@nestjs/common';
+import { Server, Socket } from 'socket.io';
+
+import {
+  ROOM_EVENT,
+  type GuessPayload,
+  type RoomJoinPayload,
+  type VotePayload,
+} from '@repo/contract';
+
+import { RoomService } from './room.service';
+import { toPlayerResponse, toRoomResponse } from './room.mapper';
+
+@WebSocketGateway({
+  cors: {
+    origin: '*',
+  },
+})
+export class RoomGateway
+  implements OnGatewayDisconnect, OnModuleDestroy {
+  @WebSocketServer()
+  server: Server;
+
+  private readonly disconnectTimers = new Map<string, NodeJS.Timeout>();
+  private readonly disconnectGraceMs = Number(
+    process.env.PLAYER_DISCONNECT_GRACE_MS ?? 30_000,
+  );
+
+  constructor(
+    private readonly roomService: RoomService,
+  ) { }
+
+  @SubscribeMessage(ROOM_EVENT.JOIN)
+  handleJoinRoom(
+    @MessageBody() data: RoomJoinPayload,
+    @ConnectedSocket() socket: Socket,
+  ) {
+    const result =
+      this.roomService.connectPlayer(
+        data.roomId,
+        data.playerId,
+        socket.id,
+      );
+
+    this.clearDisconnectTimer(data.roomId, data.playerId);
+    socket.join(data.roomId);
+
+    socket.data.roomId = data.roomId;
+    socket.data.playerId = data.playerId;
+
+    if (!result.connectionChanged) {
+      if (result.room.status === 'PLAYING') {
+        this.emitRoleAssignment(socket, data.roomId, data.playerId);
+      }
+      socket.emit(ROOM_EVENT.STATE, {
+        room: toRoomResponse(result.room),
+      });
+      return;
+    }
+
+    const player = toPlayerResponse(result.player);
+
+    if (result.reconnected) {
+      this.server
+        .to(data.roomId)
+        .emit(
+          ROOM_EVENT.PLAYER_RECONNECTED,
+          { player },
+        );
+
+    } else {
+      this.server
+        .to(data.roomId)
+        .emit(
+          ROOM_EVENT.PLAYER_JOINED,
+          { player },
+        );
+    }
+
+    this.server
+      .to(data.roomId)
+      .emit(
+        ROOM_EVENT.STATE,
+        { room: toRoomResponse(result.room) },
+      );
+
+    if (result.room.status === 'PLAYING') {
+      this.emitRoleAssignment(socket, data.roomId, data.playerId);
+    }
+  }
+
+  @SubscribeMessage(ROOM_EVENT.START)
+  handleStartGame(
+    @ConnectedSocket() socket: Socket,
+  ) {
+    const { roomId, playerId } = socket.data;
+
+    if (!roomId || !playerId) return;
+
+    const room = this.roomService.startGame(roomId, playerId);
+
+    this.server.to(roomId).emit(ROOM_EVENT.STARTED, {
+      room: toRoomResponse(room),
+    });
+    this.server.to(roomId).emit(ROOM_EVENT.STATE, {
+      room: toRoomResponse(room),
+    });
+
+    room.players.forEach((player) => {
+      if (!player.socketId) return;
+
+      this.emitRoleAssignment(player.socketId, roomId, player.id);
+    });
+  }
+
+  @SubscribeMessage(ROOM_EVENT.BEGIN_VOTING)
+  handleBeginVoting(@ConnectedSocket() socket: Socket) {
+    const { roomId, playerId } = socket.data;
+
+    if (!roomId || !playerId) return;
+
+    this.emitRoomState(this.roomService.beginVoting(roomId, playerId));
+  }
+
+  @SubscribeMessage(ROOM_EVENT.VOTE)
+  handleVote(
+    @MessageBody() data: VotePayload,
+    @ConnectedSocket() socket: Socket,
+  ) {
+    const { roomId, playerId } = socket.data;
+
+    if (!roomId || !playerId) return;
+
+    this.emitRoomState(this.roomService.castVote(roomId, playerId, data.targetId));
+  }
+
+  @SubscribeMessage(ROOM_EVENT.GUESS)
+  handleGuess(
+    @MessageBody() data: GuessPayload,
+    @ConnectedSocket() socket: Socket,
+  ) {
+    const { roomId, playerId } = socket.data;
+
+    if (!roomId || !playerId) return;
+
+    this.emitRoomState(this.roomService.guessKeyword(roomId, playerId, data.keyword));
+  }
+
+  @SubscribeMessage(ROOM_EVENT.RESTART)
+  handleRestartGame(@ConnectedSocket() socket: Socket) {
+    const { roomId, playerId } = socket.data;
+
+    if (!roomId || !playerId) return;
+
+    this.emitRoomState(this.roomService.restartGame(roomId, playerId));
+  }
+
+  handleDisconnect(socket: Socket) {
+    const { roomId, playerId } = socket.data;
+
+    if (!roomId || !playerId) return;
+
+    const result = this.roomService.disconnectPlayer(
+      roomId,
+      playerId,
+      socket.id,
+    );
+
+    if (!result) return;
+
+    socket.to(roomId).emit(
+      ROOM_EVENT.PLAYER_DISCONNECTED,
+      { playerId },
+    );
+
+    this.server
+      .to(roomId)
+      .emit(ROOM_EVENT.STATE, {
+        room: toRoomResponse(result.room),
+      });
+
+    this.schedulePlayerRemoval(roomId, playerId);
+  }
+
+  onModuleDestroy() {
+    this.disconnectTimers.forEach((timer) => clearTimeout(timer));
+    this.disconnectTimers.clear();
+  }
+
+  private schedulePlayerRemoval(roomId: string, playerId: string) {
+    this.clearDisconnectTimer(roomId, playerId);
+
+    const key = this.timerKey(roomId, playerId);
+    const timer = setTimeout(() => {
+      this.disconnectTimers.delete(key);
+
+      const result = this.roomService.expireDisconnectedPlayer(
+        roomId,
+        playerId,
+      );
+
+      if (!result) return;
+
+      if (result.roomClosed) {
+        this.clearRoomTimers(roomId);
+        this.server.to(roomId).emit(ROOM_EVENT.CLOSED, {
+          roomId,
+          reason: result.closeReason,
+        });
+        return;
+      }
+
+      this.server.to(roomId).emit(ROOM_EVENT.PLAYER_LEFT, {
+        playerId,
+      });
+      this.server.to(roomId).emit(ROOM_EVENT.STATE, {
+        room: toRoomResponse(result.room),
+      });
+    }, this.disconnectGraceMs);
+
+    this.disconnectTimers.set(key, timer);
+  }
+
+  private clearDisconnectTimer(roomId: string, playerId: string) {
+    const key = this.timerKey(roomId, playerId);
+    const timer = this.disconnectTimers.get(key);
+
+    if (!timer) return;
+
+    clearTimeout(timer);
+    this.disconnectTimers.delete(key);
+  }
+
+  private clearRoomTimers(roomId: string) {
+    const prefix = `${roomId}:`;
+
+    this.disconnectTimers.forEach((timer, key) => {
+      if (!key.startsWith(prefix)) return;
+
+      clearTimeout(timer);
+      this.disconnectTimers.delete(key);
+    });
+  }
+
+  private timerKey(roomId: string, playerId: string) {
+    return `${roomId}:${playerId}`;
+  }
+
+  private emitRoleAssignment(
+    socket: Socket | string,
+    roomId: string,
+    playerId: string,
+  ) {
+    const assignment = this.roomService.getRoleAssignment(roomId, playerId);
+
+    if (typeof socket === 'string') {
+      this.server.to(socket).emit(ROOM_EVENT.ROLE_ASSIGNED, assignment);
+      return;
+    }
+
+    socket.emit(ROOM_EVENT.ROLE_ASSIGNED, assignment);
+  }
+
+  private emitRoomState(room: ReturnType<RoomService['getRoom']>) {
+    this.server.to(room.id).emit(ROOM_EVENT.STATE, {
+      room: toRoomResponse(room),
+    });
+  }
+}
