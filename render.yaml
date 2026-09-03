@@ -3,7 +3,7 @@ services:
     name: liar-game-server
     runtime: node
     plan: free
-    buildCommand: corepack enable && pnpm install && pnpm --filter @repo/contract build && pnpm --filter server build
+    buildCommand: pnpm install && pnpm --filter @repo/contract build && pnpm --filter server build
     startCommand: pnpm --filter server start:prod
     healthCheckPath: /rooms/health
     envVars:
