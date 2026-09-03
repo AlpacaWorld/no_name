@@ -18,10 +18,11 @@ import {
 
 import { RoomService } from './room.service';
 import { toPlayerResponse, toRoomResponse } from './room.mapper';
+import { getAllowedOrigins } from '../cors';
 
 @WebSocketGateway({
   cors: {
-    origin: '*',
+    origin: getAllowedOrigins(),
   },
 })
 export class RoomGateway
