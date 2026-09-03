@@ -159,3 +159,10 @@ button, input { font: inherit; }
     width: 100%;
   }
 }
+
+@media (min-width: 1280px) {
+  .paper-card .mt-10 > h2.max-w-xl {
+    max-width: none;
+    white-space: nowrap;
+  }
+}
