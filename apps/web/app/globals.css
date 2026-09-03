@@ -12,8 +12,8 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: Arial, Helvetica, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 * { box-sizing: border-box; }
@@ -47,7 +47,7 @@ button, input { font: inherit; }
 
 .eyebrow {
   color: #f5b540;
-  font-family: var(--font-geist-mono), monospace;
+  font-family: var(--font-mono);
   font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0.19em;
@@ -113,7 +113,7 @@ button, input { font: inherit; }
   border: 1px solid rgba(241, 234, 220, 0.18);
   border-radius: 999px;
   padding: 0.35rem 0.65rem;
-  font-family: var(--font-geist-mono), monospace;
+  font-family: var(--font-mono);
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.06em;
