@@ -5,7 +5,7 @@
 ## 1. Render에 실시간 서버 배포
 
 1. [Render](https://render.com/)에서 GitHub 저장소를 연결합니다.
-2. `New +`에서 **Blueprint**를 선택하고 이 저장소의 **`dev` 브랜치**를 지정합니다. 루트의 `render.yaml`은 `plan: free`를 명시해 무료 Web Service만 생성하며, 서버 빌드·실행 명령과 상태 확인 경로도 설정합니다.
+2. `New +`에서 **Blueprint**를 선택하고 이 저장소의 **`main` 브랜치**를 지정합니다. 운영 배포 전에는 `dev`의 변경 사항을 GitHub에서 `main`으로 병합합니다. 루트의 `render.yaml`은 `plan: free`를 명시해 무료 Web Service만 생성하며, 서버 빌드·실행 명령과 상태 확인 경로도 설정합니다.
 3. `CLIENT_ORIGIN` 값에 다음 단계에서 생성할 Vercel 주소를 입력합니다. 예: `https://liar-game.vercel.app`
 4. 배포가 끝나면 Render URL을 기록합니다. 예: `https://liar-game-server.onrender.com`
 5. 브라우저에서 `https://<Render URL>/rooms/health`를 열어 `{ "status": "ok" }` 응답을 확인합니다.
